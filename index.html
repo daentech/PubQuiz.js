@@ -1,0 +1,121 @@
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"> 
+		<link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+		<script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+		<script>  $.extend(  $.mobile, { ajaxFormsEnabled: false }); </script>
+		<script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="/js/index.js"></script>		
+		<script>
+		  var teamname = '';
+		  var socket = io.connect(document.domain);
+		  socket.on('user-buzzed', function (data) {
+			  
+		  });
+		  
+		  socket.on('nextquestion', function(data){
+			 console.log("Moving to next question"); 
+			$('#question_no').text(data.question_no);
+		  });
+		  
+		  socket.on('previousquestion', function(data){
+			 console.log("Moving to previous question"); 
+			$('#question_no').text(data.question_no);
+		  });
+		  
+		  socket.on('playercorrect', function(data){
+			 console.log("The player answering the question was correct"); 
+		  });
+		  
+		  socket.on('askanother', function(data){
+			 console.log("The button needs to be reset to allow another user"); 
+		  });
+		  
+		  socket.on('tooslow', function(data){
+			  alert("Someone else buzzed first");
+		  });
+		  
+		  function buzz(){
+		  	socket.emit('buzz', {team : localStorage['teamname']});
+		  }
+		  
+		  socket.on('updatestate', function(data){
+		  		console.log("Getting updated status");
+			  $('#question_no').text(data.question_no);
+			  $('#total_questions').text(data.totalQuestions);
+				
+				  $('#question_no').text(data.question_no);
+			  $('#total_questions').text(data.totalQuestions);
+			  
+			  if(data.teams.length > 0){
+				  $('#leaderboard_ul').empty();
+				  for(i = 0; i < data.teams.length; i++){
+					  $('#leaderboard_ul').append("<li>" + data.teams[i].name + ": " + data.teams[i].score + "</li>");
+				  }
+				  
+				  if ($('#leaderboard_ul').hasClass('ui-listview')) $('#leaderboard_ul').listview('refresh');
+			  } else {
+				  
+			  }
+			  
+			  if(data.started){
+				  $('#quiz_not_started').css({'display': 'none'});
+				  $('#quiz_in_progress').css({'display': 'block'});
+			  } else {
+				  $('#quiz_in_progress').css({'display': 'none'});			  
+				  $('#quiz_not_started').css({'display': 'block'});				  
+			  }
+
+		  });
+		</script>
+	</head>
+	<body>
+		<div data-role="page" id="question">
+			 <div data-role="header"  data-tap-toggle="false" data-id="footer" data-position="fixed">
+			 	<h1>Quiz Buzzer</h1>
+			 </div>
+			<p>Team: <span id="teamname"></span></p>
+			<div id="quiz_in_progress" style="display:none;">
+			<p>Question:</p>
+			<div style="width:4.0em; height:4.0em; font-size:4.0em;text-align:center;vertical-align:middle" id="question_no">0</div> of <span id="total_questions">0</span></p>
+			<input type="button" onclick="buzz()" id="btnBuzz" value="Buzz" />
+			</div>
+			<div id="quiz_not_started">
+				Quiz currently not started. Please wait...
+			</div>
+		   <div data-role="footer"  data-tap-toggle="false" data-id="footer" data-position="fixed">
+                <div data-role="navbar" data-iconpos="top">
+					<ul>
+						<li data-icon="question"><a href="#question">Questions</a></li>
+						<li data-icon="help"><a href="#leaderboard">Scores</a></li>
+					</ul>
+                </div>
+			</div>
+			<div data-role="popup" id="popupLogin" data-overlay-theme="a" data-theme="a" class="ui-corner-all" data-dismissible="false">
+				<div style="padding:10px 20px;">
+				  <h3>Please choose a teamname</h3>
+		          <label for="tn" class="ui-hidden-accessible">Teamname:</label>
+		          <input type="text" id="tn" value="" placeholder="team name" data-theme="a" />
+					<a data-role="button" data-rel="back" data-inline="true" id="btnSignup" data-theme="c">Sign up</a> 
+				</div>
+		</div>
+		</div>
+		<div data-role="page" id="leaderboard">
+			 <div data-role="header"  data-tap-toggle="false" data-id="footer" data-position="fixed">
+			 	<h1>Leaderboard</h1>
+			 </div>
+			<ul data-role="listview" id="leaderboard_ul">
+				<li>No teams playing</li>
+			</ul>
+			<div data-role="footer"  data-tap-toggle="false" data-id="footer" data-position="fixed">
+                <div data-role="navbar" data-iconpos="top">
+					<ul>
+						<li data-icon="question"><a href="#question">Questions</a></li>
+						<li data-icon="help"><a href="#leaderboard">Scores</a></li>
+					</ul>
+                </div>
+		   </div>
+		</div>
+	</body>
+</html>
